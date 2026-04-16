@@ -13,7 +13,9 @@ from somanylemons.resources.drafts import DraftsResource
 from somanylemons.resources.image_quote import ImageQuoteResource
 from somanylemons.resources.jobs import JobsResource
 from somanylemons.resources.reels import ReelsResource
+from somanylemons.resources.templates import TemplatesResource
 from somanylemons.resources.transcribe import TranscribeResource
+from somanylemons.resources.upload import UploadResource
 
 
 class SMLClient:
@@ -62,7 +64,9 @@ class SMLClient:
         self.drafts = DraftsResource(self._transport)
         self.image_quotes = ImageQuoteResource(self._transport)
         self.reels = ReelsResource(self._transport, self.jobs)
+        self.templates = TemplatesResource(self._transport)
         self.transcribe = TranscribeResource(self._transport, self.jobs)
+        self.upload = UploadResource(self._transport)
         self.content = ContentResource(self._transport)
 
     @property

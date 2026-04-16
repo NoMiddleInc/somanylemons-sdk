@@ -23,6 +23,7 @@ from somanylemons.models.reels import (
     ReelsCreate,
     ReelsResponse,
 )
+from somanylemons.models.templates import Template
 from somanylemons.models.usage import Usage
 
 __all__ = [
@@ -45,5 +46,6 @@ __all__ = [
     "CaptionStyle",
     "ReelsCreate",
     "ReelsResponse",
+    "Template",
     "Usage",
 ]

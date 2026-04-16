@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-04-16
+
+### Added
+- `client.templates.list()` — list available video/image templates
+  (`GET /api/v1/templates`). Returns typed `Template` models with
+  `id`, `name`, `caption_style`, `thumbnail`, `width`, `height`.
+- `client.upload.upload_file(path)` — upload a local file (logo,
+  headshot, short recording) and get a hosted URL
+  (`POST /api/v1/upload`). Raises `FileNotFoundError` if path is invalid.
+- `Template` model exported from the top-level package.
+- 4 new tests covering templates list, upload file, missing file, and
+  resource presence on the client.
+
 ## [0.1.0] - 2026-04-15
 
 Initial public release.

@@ -207,3 +207,72 @@ def test_api_key_prefix_property_is_masked() -> None:
     assert "sml_AbCd" in prefix  # first 8 chars visible for identification
     assert "KlMnOp" not in prefix  # later chars hidden
     c.close()
+
+
+# ── Templates resource ──────────────────────────────────────────────────────
+
+@respx.mock
+def test_templates_list_parses_response(client: SMLClient) -> None:
+    respx.get("https://api.test.somanylemons.com/api/v1/templates").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "templates": [
+                    {
+                        "id": 42,
+                        "name": "9:16 Reel",
+                        "caption_style": "LEMON",
+                        "thumbnail": "/media/thumb.png",
+                        "width": 1080,
+                        "height": 1920,
+                    },
+                    {
+                        "id": 47,
+                        "name": "Square Quote",
+                        "caption_style": None,
+                        "thumbnail": None,
+                        "width": 1080,
+                        "height": 1080,
+                    },
+                ]
+            },
+        )
+    )
+    templates = client.templates.list()
+    assert len(templates) == 2
+    assert templates[0].id == 42
+    assert templates[0].name == "9:16 Reel"
+    assert templates[1].width == 1080
+    assert templates[1].height == 1080
+
+
+# ── Upload resource ─────────────────────────────────────────────────────────
+
+@respx.mock
+def test_upload_file_sends_multipart_and_returns_url(client: SMLClient, tmp_path) -> None:
+    test_file = tmp_path / "logo.png"
+    test_file.write_bytes(b"\x89PNG\r\n\x1a\n" + b"\x00" * 100)  # minimal PNG-like bytes
+
+    respx.post("https://api.test.somanylemons.com/api/v1/upload").mock(
+        return_value=httpx.Response(
+            200,
+            json={"url": "https://storage.example.com/logos/abc123.png"},
+        )
+    )
+    url = client.upload.upload_file(test_file)
+    assert url == "https://storage.example.com/logos/abc123.png"
+
+
+def test_upload_file_raises_on_missing_file(client: SMLClient) -> None:
+    with pytest.raises(FileNotFoundError):
+        client.upload.upload_file("/nonexistent/path/file.png")
+
+
+# ── Client has new resources ────────────────────────────────────────────────
+
+def test_client_exposes_templates_and_upload_resources(client: SMLClient) -> None:
+    from somanylemons.resources.templates import TemplatesResource
+    from somanylemons.resources.upload import UploadResource
+
+    assert isinstance(client.templates, TemplatesResource)
+    assert isinstance(client.upload, UploadResource)

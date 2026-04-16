@@ -48,11 +48,12 @@ from somanylemons.models import (
     JobStatus,
     ReelsCreate,
     ReelsResponse,
+    Template,
     UploadedBy,
     Usage,
 )
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 __all__ = [
     # Client
@@ -92,6 +93,8 @@ __all__ = [
     "Draft",
     "DraftCreate",
     "DraftStatus",
+    # Models — Templates
+    "Template",
     # Models — Usage
     "Usage",
 ]
