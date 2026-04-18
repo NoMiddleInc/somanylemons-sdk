@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "somanylemons"
-version = "0.1.1"
+version = "0.1.2"
 description = "Python SDK for the SoManyLemons Public API — branded video reels, LinkedIn content, image quotes."
 readme = "README.md"
 license = "MIT"
