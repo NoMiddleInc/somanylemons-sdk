@@ -16,6 +16,7 @@ from somanylemons.resources.reels import ReelsResource
 from somanylemons.resources.templates import TemplatesResource
 from somanylemons.resources.transcribe import TranscribeResource
 from somanylemons.resources.upload import UploadResource
+from somanylemons.resources.usage import UsageResource
 
 
 class SMLClient:
@@ -67,6 +68,7 @@ class SMLClient:
         self.templates = TemplatesResource(self._transport)
         self.transcribe = TranscribeResource(self._transport, self.jobs)
         self.upload = UploadResource(self._transport)
+        self.usage = UsageResource(self._transport)
         self.content = ContentResource(self._transport)
 
     @property
