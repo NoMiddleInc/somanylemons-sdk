@@ -16,6 +16,7 @@ from somanylemons.models.jobs import (
     UploadedBy,
 )
 from somanylemons.models.reels import (
+    AssetType,
     Background,
     BackgroundType,
     CaptionConfig,
@@ -40,6 +41,7 @@ __all__ = [
     "JobClip",
     "JobStatus",
     "UploadedBy",
+    "AssetType",
     "Background",
     "BackgroundType",
     "CaptionConfig",

@@ -25,6 +25,17 @@ class CaptionStyle(str, Enum):
     BOUNCE = "BOUNCE"
 
 
+class AssetType(str, Enum):
+    """Rendered asset types for API-created clips.
+
+    If omitted, the API defaults to ``videogram``.
+    """
+
+    VIDEOGRAM = "videogram"
+    AUDIOGRAM = "audiogram"
+    IMAGE_QUOTE = "image_quote"
+
+
 class BackgroundType(str, Enum):
     SOLID = "solid"
     IMAGE = "image"
@@ -75,6 +86,7 @@ class ReelsCreate(BaseModel):
 
     url: str | None = None
     brand_profile_id: int | None = None
+    asset_types: list[AssetType] | None = None
     caption_style: CaptionStyle | None = None
     background: Background | None = None
     logo_url: str | None = None

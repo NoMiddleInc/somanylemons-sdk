@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import mimetypes
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from pathlib import Path
 
 from somanylemons.http import SyncTransport
@@ -12,6 +12,7 @@ from somanylemons.models.reels import (
     Background,
     CaptionConfig,
     CaptionStyle,
+    AssetType,
     ReelsCreate,
     ReelsResponse,
 )
@@ -31,6 +32,7 @@ class ReelsResource:
         url: str | None = None,
         file_path: str | Path | None = None,
         brand_profile_id: int | None = None,
+        asset_types: Sequence[AssetType | str] | None = None,
         caption_style: CaptionStyle | str | None = None,
         background: Background | dict | None = None,
         logo_url: str | None = None,
@@ -52,6 +54,7 @@ class ReelsResource:
         if file_path is not None:
             data = self._build_multipart_fields(
                 brand_profile_id=brand_profile_id,
+                asset_types=asset_types,
                 caption_style=caption_style,
                 logo_url=logo_url,
                 headshot_url=headshot_url,
@@ -72,6 +75,7 @@ class ReelsResource:
             payload = ReelsCreate(
                 url=url,
                 brand_profile_id=brand_profile_id,
+                asset_types=self._normalize_asset_types(asset_types),
                 caption_style=CaptionStyle(caption_style)
                 if isinstance(caption_style, str)
                 else caption_style,
@@ -117,10 +121,26 @@ class ReelsResource:
         for key, val in kwargs.items():
             if val is None:
                 continue
-            if isinstance(val, CaptionStyle):
+            if isinstance(val, CaptionStyle | AssetType):
                 out[key] = val.value
+            elif isinstance(val, Sequence) and not isinstance(val, str):
+                out[key] = ",".join(
+                    item.value if isinstance(item, AssetType) else str(item)
+                    for item in val
+                )
             elif isinstance(val, bool):
                 out[key] = "true" if val else "false"
             else:
                 out[key] = str(val)
         return out
+
+    @staticmethod
+    def _normalize_asset_types(
+        asset_types: Sequence[AssetType | str] | None,
+    ) -> list[AssetType] | None:
+        if asset_types is None:
+            return None
+        return [
+            AssetType(asset_type) if isinstance(asset_type, str) else asset_type
+            for asset_type in asset_types
+        ]

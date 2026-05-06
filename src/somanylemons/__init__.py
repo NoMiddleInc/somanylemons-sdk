@@ -35,6 +35,7 @@ from somanylemons.models import (
     Brand,
     BrandCreate,
     BrandSource,
+    AssetType,
     CaptionConfig,
     CaptionStyle,
     ClipSource,
@@ -82,6 +83,7 @@ __all__ = [
     # Models — Reels
     "ReelsCreate",
     "ReelsResponse",
+    "AssetType",
     "Background",
     "BackgroundType",
     "CaptionConfig",

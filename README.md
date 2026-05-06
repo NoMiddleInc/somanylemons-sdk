@@ -23,6 +23,7 @@ for job in client.jobs.list(limit=5):
 job = client.reels.create_and_wait(
     url="https://example.com/recording.mp4",
     brand_profile_id=1,
+    asset_types=["videogram"],  # default; add "audiogram" or "image_quote" when needed
     caption_style="LEMON",
     timeout=600,
 )

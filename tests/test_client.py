@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 import httpx
 import pytest
 import respx
@@ -143,6 +145,24 @@ def test_reels_create_requires_url_xor_file_path(client: SMLClient) -> None:
         client.reels.create()
     with pytest.raises(ValueError):
         client.reels.create(url="https://a.test", file_path="/tmp/x.mp4")
+
+
+@respx.mock
+def test_reels_create_sends_asset_types(client: SMLClient) -> None:
+    route = respx.post("https://api.test.somanylemons.com/api/v1/clip").mock(
+        return_value=httpx.Response(
+            202,
+            json={"id": "abc-123", "status": "pending"},
+        )
+    )
+
+    client.reels.create(
+        url="https://example.com/video.mp4",
+        asset_types=["videogram", "image_quote"],
+    )
+
+    payload = json.loads(route.calls.last.request.content)
+    assert payload["asset_types"] == ["videogram", "image_quote"]
 
 
 # ── Security tests ──────────────────────────────────────────────────────────
