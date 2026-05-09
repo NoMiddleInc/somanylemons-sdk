@@ -92,10 +92,13 @@ class ReelsCreate(BaseModel):
     logo_url: str | None = None
     headshot_url: str | None = None
     caption_config: CaptionConfig | None = None
+    orientation: str | None = None
     show_speaker: bool | None = None
     show_headshot: bool | None = None
     webhook_url: str | None = None
     composition_overrides: dict[str, Any] | None = None
+    asset_types: list[str] | None = None
+    template_ids: dict[str, int | str] | None = None
 
 
 class ReelsResponse(BaseModel):

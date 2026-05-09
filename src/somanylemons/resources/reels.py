@@ -38,8 +38,10 @@ class ReelsResource:
         logo_url: str | None = None,
         headshot_url: str | None = None,
         caption_config: CaptionConfig | dict | None = None,
+        orientation: str | None = None,
         show_speaker: bool | None = None,
         show_headshot: bool | None = None,
+        template_ids: dict[str, int | str] | None = None,
         webhook_url: str | None = None,
     ) -> ReelsResponse:
         """Submit a recording for rendering.
@@ -58,8 +60,11 @@ class ReelsResource:
                 caption_style=caption_style,
                 logo_url=logo_url,
                 headshot_url=headshot_url,
+                orientation=orientation,
                 show_speaker=show_speaker,
                 show_headshot=show_headshot,
+                asset_types=asset_types,
+                template_ids=template_ids,
                 webhook_url=webhook_url,
             )
             path = Path(file_path)
@@ -85,8 +90,11 @@ class ReelsResource:
                 caption_config=CaptionConfig(**caption_config)
                 if isinstance(caption_config, dict)
                 else caption_config,
+                orientation=orientation,
                 show_speaker=show_speaker,
                 show_headshot=show_headshot,
+                asset_types=asset_types,
+                template_ids=template_ids,
                 webhook_url=webhook_url,
             ).model_dump(exclude_none=True, mode="json")
             response = self._t.request("POST", "/api/v1/clip", json=payload)
@@ -115,9 +123,9 @@ class ReelsResource:
         )
 
     @staticmethod
-    def _build_multipart_fields(**kwargs) -> dict[str, str]:
+    def _build_multipart_fields(**kwargs) -> dict[str, str | list[str]]:
         """Serialize kwargs as multipart form strings, skipping None values."""
-        out: dict[str, str] = {}
+        out: dict[str, str | list[str]] = {}
         for key, val in kwargs.items():
             if val is None:
                 continue
