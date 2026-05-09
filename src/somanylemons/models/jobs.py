@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -34,23 +35,31 @@ class UploadedBy(BaseModel):
     email: str | None = None
 
 
-class JobClip(BaseModel):
-    """A single rendered clip produced from a Job."""
+class JobAsset(BaseModel):
+    """A single rendered asset produced from a Job."""
 
     model_config = ConfigDict(extra="allow")
 
     id: str
+    asset_type: str | None = None
+    media_type: str | None = None
+    template: dict[str, Any] | None = None
     url: str | None = None
     thumbnail_url: str | None = None
     duration_seconds: float | None = None
     transcript: str | None = None
 
 
+class JobClip(JobAsset):
+    """A legacy video-only rendered clip produced from a Job."""
+
+
 class Job(BaseModel):
     """A recording (Clip) as returned by /api/v1/jobs or /api/v1/clip/{id}.
 
-    The list endpoint returns a compact view (no ``clips``, short ``transcript_preview``).
-    The detail endpoint returns the full view with ``clips`` populated.
+    The list endpoint returns a compact view (no render arrays, short
+    ``transcript_preview``). The detail endpoint returns ``assets`` for every
+    rendered asset and ``clips`` for the legacy video-only list.
     """
 
     model_config = ConfigDict(extra="allow")
@@ -66,6 +75,7 @@ class Job(BaseModel):
     transcript_preview: str = ""
     uploaded_by: UploadedBy | None = None
     clip_count: int | None = None
+    assets: list[JobAsset] = Field(default_factory=list)
     clips: list[JobClip] = Field(default_factory=list)
     error: str | None = None
     created_at: datetime | str | None = None

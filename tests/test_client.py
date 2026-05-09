@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import json
-
 import httpx
 import json
 import pytest
@@ -49,6 +47,52 @@ def test_list_jobs_parses_compact_response(client: SMLClient) -> None:
     assert jobs[0].id == "42"
     assert jobs[0].clip_count == 3
     assert jobs[0].is_successful
+
+
+@respx.mock
+def test_job_detail_parses_all_assets_and_legacy_video_clips(client: SMLClient) -> None:
+    respx.get("https://api.test.somanylemons.com/api/v1/clip/job-123").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "id": "job-123",
+                "status": "completed",
+                "progress": 100,
+                "assets": [
+                    {
+                        "id": "seed-video",
+                        "asset_type": "videogram",
+                        "media_type": "video",
+                        "template": {"id": 45, "asset_type": "videogram"},
+                        "url": "/media/video.mp4",
+                    },
+                    {
+                        "id": "seed-image",
+                        "asset_type": "quote_image",
+                        "media_type": "image",
+                        "template": {"id": 6, "asset_type": "image_quote"},
+                        "url": "/media/image.png",
+                    },
+                ],
+                "clips": [
+                    {
+                        "id": "seed-video",
+                        "asset_type": "videogram",
+                        "media_type": "video",
+                        "template": {"id": 45, "asset_type": "videogram"},
+                        "url": "/media/video.mp4",
+                    },
+                ],
+            },
+        )
+    )
+
+    job = client.jobs.get("job-123")
+
+    assert len(job.assets) == 2
+    assert len(job.clips) == 1
+    assert job.assets[1].asset_type == "quote_image"
+    assert job.assets[1].template == {"id": 6, "asset_type": "image_quote"}
 
 
 @respx.mock
@@ -166,6 +210,70 @@ def test_reels_create_sends_asset_types(client: SMLClient) -> None:
     assert payload["asset_types"] == ["videogram", "image_quote"]
 
 
+@respx.mock
+def test_reels_create_sends_speaker_identity(client: SMLClient) -> None:
+    route = respx.post("https://api.test.somanylemons.com/api/v1/clip").mock(
+        return_value=httpx.Response(
+            202,
+            json={"id": "abc-123", "status": "pending"},
+        )
+    )
+
+    client.reels.create(
+        url="https://example.com/video.mp4",
+        speaker_name="Nico Gomez",
+        speaker_title="Software Engineer",
+        headshot_url="https://cdn.example.com/nico-headshot.png",
+    )
+
+    payload = json.loads(route.calls.last.request.content)
+    assert payload["speaker_name"] == "Nico Gomez"
+    assert payload["speaker_title"] == "Software Engineer"
+    assert payload["headshot_url"] == "https://cdn.example.com/nico-headshot.png"
+
+
+@respx.mock
+def test_reels_create_sends_source_video_fit(client: SMLClient) -> None:
+    route = respx.post("https://api.test.somanylemons.com/api/v1/clip").mock(
+        return_value=httpx.Response(
+            202,
+            json={"id": "abc-123", "status": "pending"},
+        )
+    )
+
+    client.reels.create(
+        url="https://example.com/video.mp4",
+        source_video_fit="contain",
+    )
+
+    payload = json.loads(route.calls.last.request.content)
+    assert payload["source_video_fit"] == "contain"
+
+
+@respx.mock
+def test_reels_file_upload_serializes_template_ids_as_json(client: SMLClient, tmp_path) -> None:
+    video = tmp_path / "clip.mp4"
+    video.write_bytes(b"\x00\x00\x00\x18ftypmp42")
+    route = respx.post("https://api.test.somanylemons.com/api/v1/clip").mock(
+        return_value=httpx.Response(
+            202,
+            json={"id": "abc-123", "status": "pending"},
+        )
+    )
+
+    client.reels.create(
+        file_path=video,
+        asset_types=["videogram", "audiogram"],
+        template_ids={"videogram": 45, "audiogram": 46},
+    )
+
+    body = route.calls.last.request.content.decode("utf-8", errors="ignore")
+    assert 'name="asset_types"' in body
+    assert "videogram,audiogram" in body
+    assert 'name="template_ids"' in body
+    assert '{"videogram": 45, "audiogram": 46}' in body
+
+
 # ── Security tests ──────────────────────────────────────────────────────────
 
 def test_api_key_does_not_leak_via_repr() -> None:
@@ -265,6 +373,18 @@ def test_templates_list_parses_response(client: SMLClient) -> None:
     assert templates[0].name == "9:16 Reel"
     assert templates[1].width == 1080
     assert templates[1].height == 1080
+
+
+@respx.mock
+def test_templates_list_sends_filters(client: SMLClient) -> None:
+    route = respx.get("https://api.test.somanylemons.com/api/v1/templates").mock(
+        return_value=httpx.Response(200, json={"templates": []})
+    )
+
+    client.templates.list(asset_type="videogram", orientation="horizontal")
+
+    assert route.calls.last.request.url.params["asset_type"] == "videogram"
+    assert route.calls.last.request.url.params["orientation"] == "horizontal"
 
 
 # ── Upload resource ─────────────────────────────────────────────────────────

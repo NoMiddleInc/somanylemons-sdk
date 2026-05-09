@@ -90,14 +90,16 @@ class ReelsCreate(BaseModel):
     caption_style: CaptionStyle | None = None
     background: Background | None = None
     logo_url: str | None = None
+    speaker_name: str | None = None
+    speaker_title: str | None = None
     headshot_url: str | None = None
+    source_video_fit: str | None = None
     caption_config: CaptionConfig | None = None
     orientation: str | None = None
     show_speaker: bool | None = None
     show_headshot: bool | None = None
     webhook_url: str | None = None
     composition_overrides: dict[str, Any] | None = None
-    asset_types: list[str] | None = None
     template_ids: dict[str, int | str] | None = None
 
 

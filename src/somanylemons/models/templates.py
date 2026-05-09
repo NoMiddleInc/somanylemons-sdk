@@ -12,7 +12,13 @@ class Template(BaseModel):
 
     id: int
     name: str
+    template_key: str | None = None
+    model: str | None = None
+    asset_type: str | None = None
     caption_style: str | None = None
-    thumbnail: str | None = None
+    size: str | None = None
+    thumbnail_url: str | None = None
+    preview_video_url: str | None = None
+    source: str | None = None
     width: int = 1080
     height: int = 1920

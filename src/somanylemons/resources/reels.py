@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import mimetypes
+import json
 from collections.abc import Callable, Sequence
 from pathlib import Path
 
@@ -36,7 +37,10 @@ class ReelsResource:
         caption_style: CaptionStyle | str | None = None,
         background: Background | dict | None = None,
         logo_url: str | None = None,
+        speaker_name: str | None = None,
+        speaker_title: str | None = None,
         headshot_url: str | None = None,
+        source_video_fit: str | None = None,
         caption_config: CaptionConfig | dict | None = None,
         orientation: str | None = None,
         show_speaker: bool | None = None,
@@ -59,11 +63,13 @@ class ReelsResource:
                 asset_types=asset_types,
                 caption_style=caption_style,
                 logo_url=logo_url,
+                speaker_name=speaker_name,
+                speaker_title=speaker_title,
                 headshot_url=headshot_url,
+                source_video_fit=source_video_fit,
                 orientation=orientation,
                 show_speaker=show_speaker,
                 show_headshot=show_headshot,
-                asset_types=asset_types,
                 template_ids=template_ids,
                 webhook_url=webhook_url,
             )
@@ -86,14 +92,16 @@ class ReelsResource:
                 else caption_style,
                 background=Background(**background) if isinstance(background, dict) else background,
                 logo_url=logo_url,
+                speaker_name=speaker_name,
+                speaker_title=speaker_title,
                 headshot_url=headshot_url,
+                source_video_fit=source_video_fit,
                 caption_config=CaptionConfig(**caption_config)
                 if isinstance(caption_config, dict)
                 else caption_config,
                 orientation=orientation,
                 show_speaker=show_speaker,
                 show_headshot=show_headshot,
-                asset_types=asset_types,
                 template_ids=template_ids,
                 webhook_url=webhook_url,
             ).model_dump(exclude_none=True, mode="json")
@@ -136,6 +144,8 @@ class ReelsResource:
                     item.value if isinstance(item, AssetType) else str(item)
                     for item in val
                 )
+            elif isinstance(val, dict):
+                out[key] = json.dumps(val)
             elif isinstance(val, bool):
                 out[key] = "true" if val else "false"
             else:
