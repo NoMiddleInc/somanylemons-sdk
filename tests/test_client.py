@@ -170,6 +170,29 @@ def test_quota_error_exposes_usage_fields(client: SMLClient) -> None:
     assert exc_info.value.render_limit == 5
 
 
+@respx.mock
+def test_quota_error_handles_nested_detail_payload(client: SMLClient) -> None:
+    respx.post("https://api.test.somanylemons.com/api/v1/clip").mock(
+        return_value=httpx.Response(
+            403,
+            json={
+                "detail": {
+                    "error": "render_quota_exceeded",
+                    "message": "You have used all 5 renders for 2026-05.",
+                    "limit": "5",
+                    "used": "5",
+                    "remaining": "0",
+                },
+            },
+        )
+    )
+    with pytest.raises(QuotaError) as exc_info:
+        client.reels.create(url="https://example.com/video.mp4")
+    assert exc_info.value.message == "You have used all 5 renders for 2026-05."
+    assert exc_info.value.renders_used == 5
+    assert exc_info.value.render_limit == 5
+
+
 def test_client_uses_env_key_when_no_arg(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("SML_API_KEY", "sml_fromenv12345")
     monkeypatch.setenv("SML_API_URL", "https://env-url.somanylemons.com")

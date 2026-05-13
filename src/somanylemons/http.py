@@ -111,12 +111,26 @@ def _classify_response(response: httpx.Response) -> None:
         raise AuthError(message, status_code=status, response_body=body)
     if status == 403:
         # Differentiate quota from generic permission error if the server signals it.
-        detail = (body.get("detail") or "").lower() if isinstance(body, dict) else ""
-        if "quota" in detail or "render_limit" in (body if isinstance(body, dict) else {}):
+        detail = body.get("detail") if isinstance(body, dict) else None
+        detail_text = _stringify_error_detail(detail).lower()
+        detail_data = detail if isinstance(detail, dict) else {}
+        quota_code = detail_data.get("error") == "render_quota_exceeded"
+        if (
+            quota_code
+            or "quota" in detail_text
+            or "render_limit" in (body if isinstance(body, dict) else {})
+            or "limit" in detail_data
+        ):
             raise QuotaError(
                 message,
-                renders_used=body.get("renders_used") if isinstance(body, dict) else None,
-                render_limit=body.get("render_limit") if isinstance(body, dict) else None,
+                renders_used=_coerce_int(
+                    body.get("renders_used") if isinstance(body, dict) else None,
+                    detail_data.get("used"),
+                ),
+                render_limit=_coerce_int(
+                    body.get("render_limit") if isinstance(body, dict) else None,
+                    detail_data.get("limit"),
+                ),
                 response_body=body,
             )
         raise PermissionError(message, status_code=status, response_body=body)
@@ -137,6 +151,33 @@ def _extract_message(body: Any) -> str | None:
             val = body.get(key)
             if isinstance(val, str) and val:
                 return val
+            if isinstance(val, dict):
+                nested = _extract_message(val)
+                if nested:
+                    return nested
+    return None
+
+
+def _stringify_error_detail(detail: Any) -> str:
+    if isinstance(detail, str):
+        return detail
+    if isinstance(detail, dict):
+        return " ".join(
+            str(value)
+            for key in ("error", "message", "code")
+            if (value := detail.get(key)) is not None
+        )
+    return ""
+
+
+def _coerce_int(*values: Any) -> int | None:
+    for value in values:
+        if value is None:
+            continue
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            continue
     return None
 
 
